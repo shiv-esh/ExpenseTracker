@@ -1,7 +1,5 @@
 package stqm.expenseTracker.controller;
 
-;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,24 +23,21 @@ public class CategoryController {
         return new ResponseEntity<>(newCategory, HttpStatus.CREATED);
     }
 
-
     @GetMapping
     public ResponseEntity<List<Category>> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();
         return new ResponseEntity<>(categories, HttpStatus.OK);
     }
 
-
     @GetMapping("/{id}")
-    public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
+    public ResponseEntity<Category> getCategoryById(@PathVariable String id) {
         Optional<Category> categoryOpt = categoryService.getCategoryById(id);
         return categoryOpt.map(category -> new ResponseEntity<>(category, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-
     @PutMapping("/update/{id}")
-    public ResponseEntity<Category> updateCategory(@PathVariable Long id, @RequestBody Category category) {
+    public ResponseEntity<Category> updateCategory(@PathVariable String id, @RequestBody Category category) {
         try {
             Category updatedCategory = categoryService.updateCategory(id, category);
             return new ResponseEntity<>(updatedCategory, HttpStatus.OK);
@@ -51,9 +46,8 @@ public class CategoryController {
         }
     }
 
-
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteCategory(@PathVariable Long id) {
+    public ResponseEntity<String> deleteCategory(@PathVariable String id) {
         categoryService.deleteCategory(id);
         return new ResponseEntity<>("Category deleted successfully", HttpStatus.OK);
     }

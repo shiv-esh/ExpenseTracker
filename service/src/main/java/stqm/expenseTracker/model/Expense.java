@@ -1,23 +1,28 @@
 package stqm.expenseTracker.model;
 
-import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 
-@Entity
+@Document(collection = "expenses")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Expense {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
+    private String id;
     private String description;
-
-    @Column(nullable = false)
     private double amount;
-
-    @Column(nullable = false)
     private LocalDate date;
 
-    // Getters and Setters
+    @DBRef
+    private User user;
+
+    @DBRef
+    private Category category;
 }

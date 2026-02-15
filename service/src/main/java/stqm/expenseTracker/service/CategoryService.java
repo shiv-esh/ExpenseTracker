@@ -1,7 +1,5 @@
 package stqm.expenseTracker.service;
 
-
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import stqm.expenseTracker.model.Category;
@@ -24,11 +22,11 @@ public class CategoryService {
         return categoryRepository.findAll();
     }
 
-    public Optional<Category> getCategoryById(Long id) {
+    public Optional<Category> getCategoryById(String id) {
         return categoryRepository.findById(id);
     }
 
-    public Category updateCategory(Long id, Category updatedCategory) throws Exception {
+    public Category updateCategory(String id, Category updatedCategory) throws Exception {
         Optional<Category> existingCategoryOpt = categoryRepository.findById(id);
 
         if (existingCategoryOpt.isPresent()) {
@@ -40,7 +38,7 @@ public class CategoryService {
         }
     }
 
-    public void deleteCategory(Long id) {
+    public void deleteCategory(String id) {
         categoryRepository.deleteById(id);
     }
 }
