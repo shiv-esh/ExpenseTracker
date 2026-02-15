@@ -10,37 +10,46 @@
     <main class="content">
         <div class="dashboard-grid">
             <!-- Add Expense Form -->
-            <section class="glass-card add-expense">
-                <h3>Add Daily Expense</h3>
-                <form (ngSubmit)="addExpense()" #expenseForm="ngForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Amount (₹)</label>
-                            <input type="number" name="amount" [(ngModel)]="newExpense.amount" required
-                                placeholder="0.00">
+            <section class="add-expense-container">
+                <div class="glass-card total-summary">
+                    <h4>Total for {{ newExpense.date | date:'longDate' }}</h4>
+                    <h2 class="total-amount">₹{{ dailyTotal | number:'1.2-2' }}</h2>
+                </div>
+
+                <section class="glass-card add-expense">
+                    <h3>Add Daily Expense</h3>
+                    <form (ngSubmit)="addExpense()" #expenseForm="ngForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Amount (₹)</label>
+                                <input type="number" name="amount" [(ngModel)]="newExpense.amount" required
+                                    placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select name="category" [(ngModel)]="newExpense.category" required>
+                                    <option [ngValue]="null" disabled>Select Category</option>
+                                    <option *ngFor="let cat of categories" [ngValue]="cat">{{ cat.name }}</option>
+                                </select>
+                            </div>
                         </div>
+
                         <div class="form-group">
-                            <label>Category</label>
-                            <select name="category" [(ngModel)]="newExpense.category" required>
-                                <option [ngValue]="null" disabled>Select Category</option>
-                                <option *ngFor="let cat of categories" [ngValue]="cat">{{ cat.name }}</option>
-                            </select>
+                            <label>Description (Optional)</label>
+                            <textarea name="description" [(ngModel)]="newExpense.description"
+                                placeholder="What was this for?"></textarea>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label>Description (Optional)</label>
-                        <textarea name="description" [(ngModel)]="newExpense.description"
-                            placeholder="What was this for?"></textarea>
-                    </div>
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" name="date" [(ngModel)]="newExpense.date" (change)="onDateChange()"
+                                required>
+                        </div>
 
-                    <div class="form-group">
-                        <label>Date</label>
-                        <input type="date" name="date" [(ngModel)]="newExpense.date" required>
-                    </div>
-
-                    <button type="submit" class="btn-primary" [disabled]="!expenseForm.form.valid">Add Expense</button>
-                </form>
+                        <button type="submit" class="btn-primary" [disabled]="!expenseForm.form.valid">Add
+                            Expense</button>
+                    </form>
+                </section>
             </section>
 
             <!-- Expense List -->

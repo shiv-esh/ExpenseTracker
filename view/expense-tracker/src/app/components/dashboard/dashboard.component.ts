@@ -12,6 +12,7 @@ export class DashboardComponent implements OnInit {
     user: any;
     expenses: any[] = [];
     categories: any[] = [];
+    dailyTotal: number = 0;
     newExpense = {
         amount: null,
         category: null,
@@ -33,6 +34,7 @@ export class DashboardComponent implements OnInit {
         }
         this.loadExpenses();
         this.loadCategories();
+        this.loadDailyTotal();
     }
 
     loadExpenses() {
@@ -54,8 +56,19 @@ export class DashboardComponent implements OnInit {
         };
         this.expenseService.recordExpense(expenseData).subscribe(() => {
             this.loadExpenses();
+            this.loadDailyTotal();
             this.resetForm();
         });
+    }
+
+    loadDailyTotal() {
+        this.expenseService.getDailyTotal(this.user.username, this.newExpense.date).subscribe(total => {
+            this.dailyTotal = total;
+        });
+    }
+
+    onDateChange() {
+        this.loadDailyTotal();
     }
 
     resetForm() {

@@ -18,6 +18,12 @@ export class ExpenseService {
         return this.http.post(`${this.apiUrl}/record`, expense);
     }
 
+    getDailyTotal(username: string, date: string): Observable<number> {
+        return this.http.get<number>(`${this.apiUrl}/total`, {
+            params: { username, date }
+        });
+    }
+
     getCategories(): Observable<any[]> {
         return this.http.get<any[]>('http://localhost:8081/api/categories');
     }

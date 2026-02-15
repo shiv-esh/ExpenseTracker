@@ -29,4 +29,9 @@ public class ExpenseController {
     public ResponseEntity<List<Expense>> getExpensesByUser(@PathVariable String username) {
         return new ResponseEntity<>(expenseService.getExpensesByUser(username), HttpStatus.OK);
     }
+
+    @GetMapping("/total")
+    public ResponseEntity<Double> getDailyTotal(@RequestParam String username, @RequestParam String date) {
+        return new ResponseEntity<>(expenseService.getDailyTotal(username, date), HttpStatus.OK);
+    }
 }

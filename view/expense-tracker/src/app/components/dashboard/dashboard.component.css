@@ -64,6 +64,13 @@
     }
 }
 
+.add-expense-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+
 .glass-card {
     background: #fff;
     padding: 2rem;
@@ -76,6 +83,27 @@ h3 {
     font-size: 1.25rem;
     color: #333;
     font-weight: 700;
+}
+
+/* Specific Summary Override */
+.glass-card.total-summary {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
+    color: white;
+    text-align: center;
+}
+
+.total-summary h4 {
+    margin: 0;
+    opacity: 0.9;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.total-summary .total-amount {
+    margin: 0.5rem 0 0;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: white;
 }
 
 .form-group {

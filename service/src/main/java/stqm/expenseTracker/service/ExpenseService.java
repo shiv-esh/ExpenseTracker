@@ -7,6 +7,7 @@ import stqm.expenseTracker.model.User;
 import stqm.expenseTracker.repository.ExpenseRepository;
 import stqm.expenseTracker.repository.UserRepository;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -33,5 +34,15 @@ public class ExpenseService {
             return expenseRepository.findByUser(user.get());
         }
         return Collections.emptyList();
+    }
+
+    public double getDailyTotal(String username, String date) {
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isPresent()) {
+            LocalDate localDate = LocalDate.parse(date);
+            List<Expense> expenses = expenseRepository.findByUserAndDate(user.get(), localDate);
+            return expenses.stream().mapToDouble(Expense::getAmount).sum();
+        }
+        return 0.0;
     }
 }
