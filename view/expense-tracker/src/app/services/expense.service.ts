@@ -2,11 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { environment } from '../../environments/environment';
+
 @Injectable({
     providedIn: 'root'
 })
 export class ExpenseService {
-    private apiUrl = 'http://localhost:8081/api/expenses';
+    private apiUrl = `${environment.apiUrl}/api/expenses`;
 
     constructor(private http: HttpClient) { }
 
@@ -25,6 +27,6 @@ export class ExpenseService {
     }
 
     getCategories(): Observable<any[]> {
-        return this.http.get<any[]>('http://localhost:8081/api/categories');
+        return this.http.get<any[]>(`${environment.apiUrl}/api/categories`);
     }
 }
