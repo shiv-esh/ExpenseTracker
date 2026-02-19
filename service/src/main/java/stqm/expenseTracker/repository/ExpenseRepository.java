@@ -13,4 +13,6 @@ public interface ExpenseRepository extends MongoRepository<Expense, String> {
     List<Expense> findByUser(User user);
 
     List<Expense> findByUserAndDate(User user, LocalDate date);
+
+    List<Expense> findByUserAndDateBetween(User user, LocalDate startDate, LocalDate endDate);
 }

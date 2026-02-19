@@ -34,4 +34,18 @@ public class ExpenseController {
     public ResponseEntity<Double> getDailyTotal(@RequestParam String username, @RequestParam String date) {
         return new ResponseEntity<>(expenseService.getDailyTotal(username, date), HttpStatus.OK);
     }
+
+    @GetMapping("/total/range")
+    public ResponseEntity<Double> getTotalByDateRange(
+            @RequestParam String username,
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        return new ResponseEntity<>(expenseService.getTotalByDateRange(username, startDate, endDate), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteExpense(@PathVariable String id) {
+        expenseService.deleteExpense(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
 }

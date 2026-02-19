@@ -9,13 +9,53 @@
 
     <main class="content">
         <div class="dashboard-grid">
-            <!-- Add Expense Form -->
+            <!-- Left Column: Summary + Add Expense -->
             <section class="add-expense-container">
+
+                <!-- Daily Total Card -->
                 <div class="glass-card total-summary">
-                    <h4>Total for {{ newExpense.date | date:'longDate' }}</h4>
+                    <h4>Today's Total ({{ newExpense.date | date:'mediumDate' }})</h4>
                     <h2 class="total-amount">₹{{ dailyTotal | number:'1.2-2' }}</h2>
                 </div>
 
+                <!-- Range Filter Card -->
+                <div class="glass-card range-card">
+                    <h3>Spending Summary</h3>
+                    <div class="filter-tabs">
+                        <button [class.active]="filterMode === 'weekly'" (click)="setFilter('weekly')">This
+                            Week</button>
+                        <button [class.active]="filterMode === 'monthly'" (click)="setFilter('monthly')">This
+                            Month</button>
+                        <button [class.active]="filterMode === 'custom'" (click)="setFilter('custom')">Custom</button>
+                    </div>
+
+                    <!-- Custom Date Range Inputs -->
+                    <div class="custom-range" *ngIf="filterMode === 'custom'">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>From</label>
+                                <input type="date" [(ngModel)]="customStartDate" name="customStart">
+                            </div>
+                            <div class="form-group">
+                                <label>To</label>
+                                <input type="date" [(ngModel)]="customEndDate" name="customEnd">
+                            </div>
+                        </div>
+                        <button class="btn-apply" (click)="applyCustomRange()">Apply</button>
+                    </div>
+
+                    <div class="range-info">
+                        <span class="range-label">{{ filterLabel }}</span>
+                    </div>
+
+                    <div class="range-total-display">
+                        <span *ngIf="rangeLoading" class="loading-text">Calculating...</span>
+                        <span *ngIf="!rangeLoading && rangeTotal !== null" class="range-amount">₹{{ rangeTotal |
+                            number:'1.2-2' }}</span>
+                    </div>
+                </div>
+
+                <!-- Add Expense Form -->
                 <section class="glass-card add-expense">
                     <h3>Add Daily Expense</h3>
                     <form (ngSubmit)="addExpense()" #expenseForm="ngForm">
@@ -66,6 +106,7 @@
                                 <th>Category</th>
                                 <th>Description</th>
                                 <th>Amount</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -74,6 +115,8 @@
                                 <td><span class="badge">{{ exp.category?.name }}</span></td>
                                 <td>{{ exp.description || '-' }}</td>
                                 <td class="amount">₹{{ exp.amount | number:'1.2-2' }}</td>
+                                <td><button class="btn-delete" (click)="deleteExpense(exp.id)"
+                                        title="Delete">🗑</button></td>
                             </tr>
                         </tbody>
                     </table>

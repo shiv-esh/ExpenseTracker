@@ -45,4 +45,19 @@ public class ExpenseService {
         }
         return 0.0;
     }
+
+    public double getTotalByDateRange(String username, String startDate, String endDate) {
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isPresent()) {
+            LocalDate start = LocalDate.parse(startDate);
+            LocalDate end = LocalDate.parse(endDate);
+            List<Expense> expenses = expenseRepository.findByUserAndDateBetween(user.get(), start, end);
+            return expenses.stream().mapToDouble(Expense::getAmount).sum();
+        }
+        return 0.0;
+    }
+
+    public void deleteExpense(String id) {
+        expenseRepository.deleteById(id);
+    }
 }
