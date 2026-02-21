@@ -14,12 +14,16 @@ export class DashboardComponent implements OnInit {
     categories: any[] = [];
     dailyTotal: number = 0;
 
-    // Range filter state
+    // Range filter state (spending summary card)
     filterMode: 'monthly' | 'weekly' | 'custom' = 'monthly';
     rangeTotal: number | null = null;
     rangeLoading: boolean = false;
     customStartDate: string = '';
     customEndDate: string = '';
+
+    // Expense list filter
+    listFilterDate: string = '';
+    listFilterActive: boolean = false;
 
     newExpense = {
         amount: null,
@@ -53,8 +57,26 @@ export class DashboardComponent implements OnInit {
 
     loadExpenses() {
         this.expenseService.getExpensesByUser(this.user.username).subscribe(data => {
-            this.expenses = data;
+            // Sort descending by date on arrival
+            this.expenses = (data || []).sort((a: any, b: any) =>
+                new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
         });
+    }
+
+    // Derived list shown in the table
+    get filteredExpenses(): any[] {
+        if (this.listFilterActive && this.listFilterDate) {
+            return this.expenses.filter(e => e.date === this.listFilterDate);
+        }
+        return this.expenses;
+    }
+
+    toggleListFilter() {
+        this.listFilterActive = !this.listFilterActive;
+        if (!this.listFilterActive) {
+            this.listFilterDate = '';
+        }
     }
 
     loadCategories() {

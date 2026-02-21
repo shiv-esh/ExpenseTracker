@@ -26,6 +26,16 @@ export class ExpenseService {
         });
     }
 
+    getTotalByDateRange(username: string, startDate: string, endDate: string): Observable<number> {
+        return this.http.get<number>(`${this.apiUrl}/total/range`, {
+            params: { username, startDate, endDate }
+        });
+    }
+
+    deleteExpense(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    }
+
     getCategories(): Observable<any[]> {
         return this.http.get<any[]>(`${environment.apiUrl}/api/categories`);
     }
