@@ -29,23 +29,35 @@
 .user-info {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
-.btn-logout {
-    background: transparent;
+.welcome-text {
+    font-weight: 500;
+    color: #666;
+}
+
+.btn-logout-icon {
+    background: #fff;
     color: #ff4d4d;
     border: 1px solid #ff4d4d;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    font-weight: 600;
-    transition: 0.3s;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    padding: 0;
+    flex-shrink: 0;
 }
 
-.btn-logout:hover {
+.btn-logout-icon:hover {
     background: #ff4d4d;
     color: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(255, 77, 77, 0.3);
 }
 
 .content {
@@ -350,9 +362,17 @@ textarea {
     overflow-y: auto;
 }
 
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure table doesn't shrink too much */
 table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 500px;
 }
 
 th {
@@ -407,11 +427,33 @@ td {
     background: #fff0f0;
 }
 
+.td-date {
+    white-space: nowrap;
+}
+
+.td-desc {
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* --- Responsive --- */
 @media (max-width: 768px) {
     .navbar {
-        flex-direction: column;
-        gap: 1rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .logo {
+        font-size: 1.2rem;
+    }
+
+    .welcome-text {
+        display: none;
+        /* Hide welcome text on small screens to save space */
+    }
+
+    .content {
         padding: 1rem;
     }
 
@@ -424,20 +466,57 @@ td {
     }
 
     .glass-card {
-        padding: 1.5rem;
+        padding: 1.25rem;
+        border-radius: 16px;
     }
 
     .total-summary .total-amount {
-        font-size: 2rem;
+        font-size: 1.8rem;
+    }
+
+    h3 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
     }
 
     .form-row {
         grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    input,
+    select,
+    textarea {
+        padding: 0.6rem 0.8rem;
+    }
+
+    .btn-primary {
+        padding: 0.85rem;
+    }
+
+    .scroll-area {
+        max-height: 500px;
     }
 
     th,
     td {
-        padding: 0.75rem;
+        padding: 0.75rem 0.5rem;
         font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-grid {
+        gap: 1.5rem;
+    }
+
+    .filter-tabs button {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.25rem;
+    }
+
+    .btn-filter-toggle {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.75rem;
     }
 }
