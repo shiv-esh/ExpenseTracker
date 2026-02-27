@@ -1,1 +1,4 @@
 *.zip
+deploy.sh
+service/mvnw
+
