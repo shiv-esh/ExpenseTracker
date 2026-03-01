@@ -1,4 +1,4 @@
 *.zip
 deploy.sh
-service/mvnw
+service/target
 

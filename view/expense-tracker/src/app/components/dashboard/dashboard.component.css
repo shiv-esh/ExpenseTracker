@@ -2,20 +2,24 @@
     min-height: 100vh;
     background: #fdfafb;
     font-family: 'Outfit', sans-serif;
+    overflow-x: hidden;
+    /* Prevent horizontal scroll from content */
 }
 
 .navbar {
-    background: #fff;
-    padding: 1rem 5%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 0.75rem 5%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 12px rgba(196, 30, 58, 0.08);
+    box-shadow: 0 4px 20px rgba(196, 30, 58, 0.06);
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
     width: 100%;
     box-sizing: border-box;
+    border-bottom: 1px solid rgba(230, 57, 70, 0.05);
 }
 
 .logo {
@@ -23,6 +27,7 @@
     font-weight: 800;
     color: #2c3e50;
     letter-spacing: -0.5px;
+    flex-shrink: 0;
 }
 
 .logo span {
@@ -33,6 +38,7 @@
     display: flex;
     align-items: center;
     gap: 1.2rem;
+    flex-shrink: 0;
 }
 
 .welcome-text {
@@ -166,10 +172,23 @@ h3 {
 }
 
 .range-amount {
-    font-size: 2.4rem;
+    font-size: 2.6rem;
     font-weight: 900;
     color: #e63946;
     margin: 0.5rem 0;
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* --- Form Styles --- */
@@ -311,11 +330,12 @@ td {
 /* --- Responsive --- */
 @media (max-width: 768px) {
     .navbar {
-        padding: 0.8rem 1rem;
+        padding: 0.6rem 1.25rem;
+        height: 64px;
     }
 
     .logo {
-        font-size: 1.2rem;
+        font-size: 1.15rem;
     }
 
     .welcome-text {
@@ -325,6 +345,7 @@ td {
     .btn-logout-icon {
         width: 36px;
         height: 36px;
+        border-radius: 10px;
     }
 
     .content {

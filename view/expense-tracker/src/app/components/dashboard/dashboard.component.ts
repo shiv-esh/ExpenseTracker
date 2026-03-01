@@ -29,14 +29,16 @@ export class DashboardComponent implements OnInit {
         amount: null,
         category: null,
         description: '',
-        date: new Date().toISOString().split('T')[0]
+        date: '' // Will be set in constructor or ngOnInit
     };
 
     constructor(
         private authService: AuthService,
         private expenseService: ExpenseService,
         private router: Router
-    ) { }
+    ) {
+        this.newExpense.date = this.formatDate(new Date());
+    }
 
     ngOnInit() {
         this.user = this.authService.getCurrentUser();
@@ -118,14 +120,21 @@ export class DashboardComponent implements OnInit {
     }
 
     // --- Range filter helpers ---
+    private formatDate(date: Date): string {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     private getDateRange(): { startDate: string; endDate: string } {
         const today = new Date();
         if (this.filterMode === 'monthly') {
             const start = new Date(today.getFullYear(), today.getMonth(), 1);
             const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
             return {
-                startDate: start.toISOString().split('T')[0],
-                endDate: end.toISOString().split('T')[0]
+                startDate: this.formatDate(start),
+                endDate: this.formatDate(end)
             };
         } else if (this.filterMode === 'weekly') {
             const dayOfWeek = today.getDay(); // 0 = Sun
@@ -134,8 +143,8 @@ export class DashboardComponent implements OnInit {
             const end = new Date(start);
             end.setDate(start.getDate() + 6);
             return {
-                startDate: start.toISOString().split('T')[0],
-                endDate: end.toISOString().split('T')[0]
+                startDate: this.formatDate(start),
+                endDate: this.formatDate(end)
             };
         } else {
             return {
@@ -182,7 +191,7 @@ export class DashboardComponent implements OnInit {
             amount: null,
             category: null,
             description: '',
-            date: new Date().toISOString().split('T')[0]
+            date: this.formatDate(new Date())
         };
     }
 

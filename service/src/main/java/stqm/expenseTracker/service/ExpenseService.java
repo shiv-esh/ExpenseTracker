@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ExpenseService {
@@ -46,13 +47,28 @@ public class ExpenseService {
         return 0.0;
     }
 
+    /**
+     * Calculates the total amount of expenses for a given user within a date range.
+     * We use in-memory filtering because it's more reliable than complex Mongo
+     * range queries for small datasets.
+     */
     public double getTotalByDateRange(String username, String startDate, String endDate) {
         Optional<User> user = userRepository.findByUsername(username);
         if (user.isPresent()) {
             LocalDate start = LocalDate.parse(startDate);
             LocalDate end = LocalDate.parse(endDate);
-            List<Expense> expenses = expenseRepository.findByUserAndDateBetween(user.get(), start, end);
-            return expenses.stream().mapToDouble(Expense::getAmount).sum();
+
+            // Get all expenses for the user and filter locally for total consistency with
+            // the main list
+            List<Expense> allUserExpenses = expenseRepository.findByUser(user.get());
+
+            return allUserExpenses.stream()
+                    .filter(e -> {
+                        LocalDate d = e.getDate();
+                        return d != null && !d.isBefore(start) && !d.isAfter(end);
+                    })
+                    .mapToDouble(Expense::getAmount)
+                    .sum();
         }
         return 0.0;
     }
