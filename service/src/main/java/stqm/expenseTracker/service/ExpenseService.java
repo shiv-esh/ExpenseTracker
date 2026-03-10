@@ -8,9 +8,8 @@ import stqm.expenseTracker.repository.ExpenseRepository;
 import stqm.expenseTracker.repository.UserRepository;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ExpenseService {
@@ -70,6 +69,27 @@ public class ExpenseService {
                     .sum();
         }
         return 0.0;
+    }
+
+    public Map<String, Double> getCategoryTotalsByDateRange(String username, String startDate, String endDate) {
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isPresent()) {
+            LocalDate start = LocalDate.parse(startDate);
+            LocalDate end = LocalDate.parse(endDate);
+
+            List<Expense> allUserExpenses = expenseRepository.findByUser(user.get());
+
+            return allUserExpenses.stream()
+                    .filter(e -> {
+                        LocalDate d = e.getDate();
+                        return d != null && !d.isBefore(start) && !d.isAfter(end);
+                    })
+                    .collect(Collectors.groupingBy(
+                            e -> e.getCategory() != null ? e.getCategory().getName() : "Uncategorized",
+                            Collectors.summingDouble(Expense::getAmount)
+                    ));
+        }
+        return Collections.emptyMap();
     }
 
     public void deleteExpense(String id) {

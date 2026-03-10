@@ -2,8 +2,10 @@
     min-height: 100vh;
     background: #fdfafb;
     font-family: 'Outfit', sans-serif;
-    overflow-x: hidden;
-    max-width: 100vw;
+    overflow-x: hidden !important;
+    width: 100vw;
+    position: relative;
+    box-sizing: border-box;
 }
 
 .navbar {
@@ -66,6 +68,153 @@
     /* Added line-height */
 }
 
+/* --- Analytics Card --- */
+.analytics-card {
+    border-top: 4px solid #c41e3a;
+}
+
+.analytics-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 1rem 0;
+}
+
+.chart-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.donut-svg {
+    transform: rotate(-90deg);
+}
+
+.donut-ring {
+    fill: none;
+    stroke: #f8f9fa;
+    stroke-width: 14;
+}
+
+.donut-segment {
+    fill: none;
+    stroke-width: 16;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chart-center {
+    position: absolute;
+    text-align: center;
+    width: 100%;
+}
+
+.total-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.total-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1a1a1a;
+}
+
+.analytics-legend {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: transform 0.2s ease;
+}
+
+.legend-item:hover {
+    transform: translateX(5px);
+    background: #fff5f5;
+}
+
+.legend-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.category-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.category-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #444;
+}
+
+.legend-right {
+    text-align: right;
+}
+
+.category-amount {
+    display: block;
+    font-weight: 700;
+    color: #1a1a1a;
+    font-size: 0.95rem;
+}
+
+.category-percent {
+    font-size: 0.75rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.loading-dots {
+    animation: pulse 1.5s infinite;
+    display: inline-block;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+.loading-analytics {
+    padding: 3rem 0;
+    text-align: center;
+    color: #666;
+    font-weight: 500;
+}
+
+.empty-analytics {
+    padding: 3rem 0;
+    text-align: center;
+    opacity: 0.6;
+}
+
+.empty-analytics svg {
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
 .btn-logout-icon:hover {
     background: #e63946;
     color: #fff;
@@ -75,7 +224,7 @@
 }
 
 .content {
-    padding: 2rem 2rem;
+    padding: 1.5rem 1.5rem;
     box-sizing: border-box;
     max-width: 1400px;
     margin: 0 auto;
@@ -86,6 +235,8 @@
     display: grid;
     grid-template-columns: 1fr 1.6fr;
     gap: 2.5rem;
+    min-width: 0;
+    width: 100%;
 }
 
 @media (max-width: 1024px) {
@@ -99,6 +250,9 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
 }
 
 .glass-card {
@@ -134,16 +288,21 @@ h3 {
     margin: 0;
     opacity: 0.9;
     font-weight: 500;
-    font-size: 1rem;
+    font-size: 0.9rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
+    word-break: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+    display: block;
 }
 
 .total-summary .total-amount {
-    margin: 0.75rem 0 0;
-    font-size: 2.8rem;
+    margin: 0.5rem 0 0;
+    font-size: 2.2rem;
     font-weight: 900;
     color: white;
+    overflow-wrap: anywhere;
 }
 
 /* --- Range Filter Card --- */
@@ -180,10 +339,11 @@ h3 {
 }
 
 .range-amount {
-    font-size: 2.6rem;
+    font-size: 2.2rem;
     font-weight: 900;
     color: #e63946;
     margin: 0.5rem 0;
+    overflow-wrap: anywhere;
     animation: fadeIn 0.4s ease-out;
 }
 
@@ -303,7 +463,10 @@ textarea:focus {
     margin-top: 1rem;
     width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    display: block;
 }
 
 table {
@@ -426,6 +589,7 @@ td {
 
     .dashboard-grid {
         gap: 1rem;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .glass-card {
@@ -468,28 +632,40 @@ td {
 
 @media (max-width: 480px) {
     .total-summary .total-amount {
-        font-size: 2rem;
-    }
-
-    .range-amount {
         font-size: 1.8rem;
     }
 
-    .filter-tabs button {
+    .range-amount {
+        font-size: 1.6rem;
+    }
+
+    .total-summary h4 {
         font-size: 0.8rem;
-        padding: 0.6rem 0.3rem;
+    }
+
+    .filter-tabs button {
+        font-size: 0.75rem;
+        padding: 0.6rem 0.2rem;
     }
 
     .navbar {
-        padding: 0.7rem 0.75rem;
+        padding: 0.7rem 1rem;
     }
 
     .logo {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 
     .btn-logout-icon {
-        width: 34px;
-        height: 34px;
+        width: 32px;
+        height: 32px;
+    }
+    
+    .content {
+        padding: 0.75rem;
+    }
+    
+    .glass-card {
+        padding: 1rem;
     }
 }

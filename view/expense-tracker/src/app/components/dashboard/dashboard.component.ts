@@ -21,6 +21,10 @@ export class DashboardComponent implements OnInit {
     customStartDate: string = '';
     customEndDate: string = '';
 
+    // Analytics state
+    categoryTotals: { [key: string]: number } = {};
+    analyticsLoading: boolean = false;
+
     // Expense list filter & pagination
     listFilterDate: string = '';
     listFilterActive: boolean = false;
@@ -57,6 +61,7 @@ export class DashboardComponent implements OnInit {
         this.loadCategories();
         this.loadDailyTotal();
         this.loadRangeTotal();
+        this.loadAnalytics();
     }
 
     loadExpenses() {
@@ -120,6 +125,7 @@ export class DashboardComponent implements OnInit {
             this.loadExpenses();
             this.loadDailyTotal();
             this.loadRangeTotal();
+            this.loadAnalytics();
             this.resetForm();
         });
     }
@@ -140,6 +146,7 @@ export class DashboardComponent implements OnInit {
             this.loadExpenses();
             this.loadDailyTotal();
             this.loadRangeTotal();
+            this.loadAnalytics();
         });
     }
 
@@ -194,15 +201,84 @@ export class DashboardComponent implements OnInit {
         });
     }
 
+    loadAnalytics() {
+        const { startDate, endDate } = this.getDateRange();
+        if (!startDate || !endDate) return;
+        this.analyticsLoading = true;
+        this.expenseService.getCategoryAnalytics(this.user.username, startDate, endDate).subscribe({
+            next: (data) => {
+                this.categoryTotals = data || {};
+                this.analyticsLoading = false;
+            },
+            error: () => {
+                this.categoryTotals = {};
+                this.analyticsLoading = false;
+            }
+        });
+    }
+
+    get categoryAnalyticsArray() {
+        return Object.entries(this.categoryTotals)
+            .sort((a, b) => b[1] - a[1]) // Sort by amount descending
+            .map(([name, value]) => ({ name, value }));
+    }
+
+    get totalCategoryAmount(): number {
+        return Object.values(this.categoryTotals).reduce((a: number, b: number) => a + b, 0);
+    }
+
+    // Chart helpers
+    getCategoryColor(index: number): string {
+        const colors = [
+            '#e63946', '#f4a261', '#2a9d8f', '#264653', '#e9c46a', 
+            '#457b9d', '#1d3557', '#a8dadc', '#9b5de5', '#f15bb5'
+        ];
+        return colors[index % colors.length];
+    }
+
+    getStrokeOffset(amount: number, index: number): number {
+        const circumference = 440; // 2 * pi * r (r=70)
+        let previousTotal = 0;
+        const array = this.categoryAnalyticsArray;
+        for (let i = 0; i < index; i++) {
+            previousTotal += array[i].value;
+        }
+        
+        // This is for a stacked donut implementation
+        const total = this.totalCategoryAmount;
+        if (total === 0) return circumference;
+        
+        return circumference - (amount / total) * circumference;
+    }
+
+    // Since we're doing a simple SVG donut, we need the "start offset" 
+    // which is tricky with just CSS stroke-dashoffset if elements overlap.
+    // A better way for a single SVG circle with multiple segments is to stack them.
+    getRotation(index: number): string {
+        const total = this.totalCategoryAmount;
+        if (total === 0) return 'rotate(0)';
+        
+        const array = this.categoryAnalyticsArray;
+        let previousTotal = 0;
+        for (let i = 0; i < index; i++) {
+            previousTotal += array[i].value;
+        }
+        
+        const angle = (previousTotal / total) * 360;
+        return `rotate(${angle - 90}deg)`; // -90 to start from top
+    }
+
     setFilter(mode: 'monthly' | 'weekly' | 'custom') {
         this.filterMode = mode;
         if (mode !== 'custom') {
             this.loadRangeTotal();
+            this.loadAnalytics();
         }
     }
 
     applyCustomRange() {
         this.loadRangeTotal();
+        this.loadAnalytics();
     }
 
     get filterLabel(): string {

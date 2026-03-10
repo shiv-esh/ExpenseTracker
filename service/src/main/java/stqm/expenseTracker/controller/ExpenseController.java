@@ -8,6 +8,7 @@ import stqm.expenseTracker.model.Expense;
 import stqm.expenseTracker.service.ExpenseService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -41,6 +42,15 @@ public class ExpenseController {
             @RequestParam String startDate,
             @RequestParam String endDate) {
         return new ResponseEntity<>(expenseService.getTotalByDateRange(username, startDate, endDate), HttpStatus.OK);
+    }
+
+    @GetMapping("/analytics")
+    public ResponseEntity<Map<String, Double>> getCategoryTotalsByDateRange(
+            @RequestParam String username,
+            @RequestParam String startDate,
+            @RequestParam String endDate) {
+        return new ResponseEntity<>(expenseService.getCategoryTotalsByDateRange(username, startDate, endDate),
+                HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

@@ -32,6 +32,12 @@ export class ExpenseService {
         });
     }
 
+    getCategoryAnalytics(username: string, startDate: string, endDate: string): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/analytics`, {
+            params: { username, startDate, endDate }
+        });
+    }
+
     deleteExpense(id: string): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/${id}`);
     }
