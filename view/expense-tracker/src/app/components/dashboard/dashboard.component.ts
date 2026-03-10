@@ -21,9 +21,11 @@ export class DashboardComponent implements OnInit {
     customStartDate: string = '';
     customEndDate: string = '';
 
-    // Expense list filter
+    // Expense list filter & pagination
     listFilterDate: string = '';
     listFilterActive: boolean = false;
+    currentPage: number = 1;
+    pageSize: number = 10;
 
     newExpense = {
         amount: null,
@@ -76,8 +78,30 @@ export class DashboardComponent implements OnInit {
 
     toggleListFilter() {
         this.listFilterActive = !this.listFilterActive;
+        this.currentPage = 1; // Reset to first page when filtering
         if (!this.listFilterActive) {
             this.listFilterDate = '';
+        }
+    }
+
+    get paginatedExpenses(): any[] {
+        const startIndex = (this.currentPage - 1) * this.pageSize;
+        return this.filteredExpenses.slice(startIndex, startIndex + this.pageSize);
+    }
+
+    get totalPages(): number {
+        return Math.ceil(this.filteredExpenses.length / this.pageSize) || 1;
+    }
+
+    nextPage() {
+        if (this.currentPage < this.totalPages) {
+            this.currentPage++;
+        }
+    }
+
+    prevPage() {
+        if (this.currentPage > 1) {
+            this.currentPage--;
         }
     }
 

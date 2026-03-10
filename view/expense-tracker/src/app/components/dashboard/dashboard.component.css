@@ -355,6 +355,50 @@ td {
     color: #e63946;
 }
 
+/* --- Pagination --- */
+.pagination {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f3f5;
+}
+
+.btn-page {
+    background: #fff;
+    border: 1px solid #ffccd5;
+    color: #e63946;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-page:hover:not(:disabled) {
+    background: #e63946;
+    color: #fff;
+    border-color: #e63946;
+}
+
+.btn-page:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: #eee;
+    color: #999;
+}
+
+.page-info {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #555;
+}
+
 /* --- Responsive --- */
 @media (max-width: 768px) {
     .navbar {
