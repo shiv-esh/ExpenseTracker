@@ -35,8 +35,12 @@ export class DashboardComponent implements OnInit {
         amount: null,
         category: null,
         description: '',
-        date: '' // Will be set in constructor or ngOnInit
+        date: ''
     };
+
+    // Edit state
+    isEditing: boolean = false;
+    editingId: string | null = null;
 
     constructor(
         private authService: AuthService,
@@ -116,18 +120,49 @@ export class DashboardComponent implements OnInit {
         });
     }
 
-    addExpense() {
+    saveExpense() {
         const expenseData = {
             ...this.newExpense,
             user: this.user
         };
-        this.expenseService.recordExpense(expenseData).subscribe(() => {
-            this.loadExpenses();
-            this.loadDailyTotal();
-            this.loadRangeTotal();
-            this.loadAnalytics();
-            this.resetForm();
-        });
+
+        if (this.isEditing && this.editingId) {
+            this.expenseService.updateExpense(this.editingId, expenseData).subscribe(() => {
+                this.loadAllData();
+                this.cancelEdit();
+            });
+        } else {
+            this.expenseService.recordExpense(expenseData).subscribe(() => {
+                this.loadAllData();
+                this.resetForm();
+            });
+        }
+    }
+
+    private loadAllData() {
+        this.loadExpenses();
+        this.loadDailyTotal();
+        this.loadRangeTotal();
+        this.loadAnalytics();
+    }
+
+    editExpense(expense: any) {
+        this.isEditing = true;
+        this.editingId = expense.id;
+        this.newExpense = {
+            amount: expense.amount,
+            category: this.categories.find(c => c.id === expense.category?.id) || expense.category,
+            description: expense.description || '',
+            date: expense.date
+        };
+        // Scroll to form
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    cancelEdit() {
+        this.isEditing = false;
+        this.editingId = null;
+        this.resetForm();
     }
 
     loadDailyTotal() {

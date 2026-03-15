@@ -53,6 +53,15 @@ public class ExpenseController {
                 HttpStatus.OK);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Expense> updateExpense(@PathVariable String id, @RequestBody Expense expense) {
+        Expense updated = expenseService.updateExpense(id, expense);
+        if (updated != null) {
+            return new ResponseEntity<>(updated, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteExpense(@PathVariable String id) {
         expenseService.deleteExpense(id);

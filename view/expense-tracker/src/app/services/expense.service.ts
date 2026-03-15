@@ -38,6 +38,10 @@ export class ExpenseService {
         });
     }
 
+    updateExpense(id: string, expense: any): Observable<any> {
+        return this.http.put(`${this.apiUrl}/${id}`, expense);
+    }
+
     deleteExpense(id: string): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/${id}`);
     }

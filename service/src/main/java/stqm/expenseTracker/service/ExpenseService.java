@@ -92,6 +92,19 @@ public class ExpenseService {
         return Collections.emptyMap();
     }
 
+    public Expense updateExpense(String id, Expense updatedExpense) {
+        Optional<Expense> existing = expenseRepository.findById(id);
+        if (existing.isPresent()) {
+            Expense expense = existing.get();
+            expense.setAmount(updatedExpense.getAmount());
+            expense.setCategory(updatedExpense.getCategory());
+            expense.setDescription(updatedExpense.getDescription());
+            expense.setDate(updatedExpense.getDate());
+            return expenseRepository.save(expense);
+        }
+        return null;
+    }
+
     public void deleteExpense(String id) {
         expenseRepository.deleteById(id);
     }
