@@ -9,25 +9,22 @@
 set -e
 
 # --- Configuration ---
-EC2_USER="ubuntu"
-EC2_HOST="15.206.209.187"
+EC2_USER="shivesh"
+EC2_HOST="192.168.29.71"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # --- Validate PEM file argument ---
-if [ -z "$1" ]; then
-    echo "❌ Error: Please provide the path to your .pem file."
-    echo "   Usage: ./deploy-backend.sh <path-to-pem-file>"
-    exit 1
-fi
-
 PEM_FILE="$1"
 
-if [ ! -f "$PEM_FILE" ]; then
-    echo "❌ Error: PEM file not found at '$PEM_FILE'"
-    exit 1
+# --- Optional PEM file check ---
+SSH_OPTS="-o StrictHostKeyChecking=no"
+if [ -n "$PEM_FILE" ] && [ -f "$PEM_FILE" ]; then
+    chmod 400 "$PEM_FILE"
+    SSH_OPTS="$SSH_OPTS -i $PEM_FILE"
+    echo "🔑 Using provided PEM file: $PEM_FILE"
+else
+    echo "🔑 Using default SSH key"
 fi
-
-chmod 400 "$PEM_FILE"
 
 echo "============================================================"
 echo " 🔨 Building Backend"
@@ -43,20 +40,20 @@ echo "============================================================"
 echo " 📤 Uploading to EC2"
 echo "============================================================"
 
-scp -i "$PEM_FILE" -o StrictHostKeyChecking=no \
+scp $SSH_OPTS \
     "$SCRIPT_DIR/service/target/expenseTracker-0.0.1-SNAPSHOT.jar" \
     "$EC2_USER@$EC2_HOST:~/"
 
 echo ""
 echo "🚀 Restarting backend on EC2..."
-ssh -i "$PEM_FILE" -o StrictHostKeyChecking=no "$EC2_USER@$EC2_HOST" << 'REMOTE'
+ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" << 'REMOTE'
     pkill -f "expenseTracker-0.0.1-SNAPSHOT.jar" 2>/dev/null || true
-    sleep 2
+    sleep 5
     nohup java -jar ~/expenseTracker-0.0.1-SNAPSHOT.jar > ~/app.log 2>&1 &
     echo "Backend started."
 REMOTE
 
 echo "============================================================"
 echo " ✅ Backend Deployment Complete!"
-echo " 📋 Logs: ssh -i $PEM_FILE $EC2_USER@$EC2_HOST 'tail -f ~/app.log'"
+echo " 📋 Logs: ssh $SSH_OPTS $EC2_USER@$EC2_HOST 'tail -f ~/app.log'"
 echo "============================================================"

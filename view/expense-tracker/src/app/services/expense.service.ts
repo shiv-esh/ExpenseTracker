@@ -8,7 +8,7 @@ import { environment } from '../../environments/environment';
     providedIn: 'root'
 })
 export class ExpenseService {
-    private apiUrl = `${environment.apiUrl}/api/expenses`;
+    private apiUrl = `${environment.apiUrl}/api/expenses`.replace(/\/+/, '/');
 
     constructor(private http: HttpClient) { }
 
@@ -47,6 +47,7 @@ export class ExpenseService {
     }
 
     getCategories(): Observable<any[]> {
-        return this.http.get<any[]>(`${environment.apiUrl}/api/categories`);
+        const url = `${environment.apiUrl}/api/categories`.replace(/\/+/, '/');
+        return this.http.get<any[]>(url);
     }
 }

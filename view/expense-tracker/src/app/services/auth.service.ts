@@ -8,7 +8,7 @@ import { environment } from '../../environments/environment';
     providedIn: 'root'
 })
 export class AuthService {
-    private apiUrl = `${environment.apiUrl}/api/users`;
+    private apiUrl = `${environment.apiUrl}/api/users`.replace(/\/+/, '/');
     private currentUser: any = null;
 
     constructor(private http: HttpClient) {
