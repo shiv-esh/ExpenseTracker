@@ -1,0 +1,19 @@
+[Unit]
+Description=Expense Tracker Backend Service
+After=network.target mongodb.service
+
+[Service]
+User=shivesh
+WorkingDirectory=/home/shivesh/
+ExecStart=/usr/bin/java -Xmx512m -Xms256m -jar /home/shivesh/expenseTracker-0.0.1-SNAPSHOT.jar
+SuccessExitStatus=143
+
+# --- Permanent environment variables ---
+Environment=MONGODB_URI=mongodb://localhost:27017/expenseTracker
+Environment=MONGODB_DB=expenseTracker
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

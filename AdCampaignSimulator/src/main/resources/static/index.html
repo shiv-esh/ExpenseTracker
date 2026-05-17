@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ad-Campaign Analytics Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+        }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 2rem;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        select {
+            background: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid var(--text-muted);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+        canvas {
+            width: 100% !important;
+            height: 300px !important;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🚀 Real-Time Ad-Campaign Analytics</h1>
+
+    <div class="dashboard">
+        <div class="card">
+            <h2>Campaign CTR (Live)</h2>
+            <canvas id="ctrChart"></canvas>
+        </div>
+        <div class="card">
+            <h2>
+                Hourly Clicks
+                <select id="campaignSelect" onchange="fetchHourlyStats()">
+                    <option value="1">Summer Sale</option>
+                    <option value="2">Winter Clearance</option>
+                    <option value="3">Spring Collection</option>
+                    <option value="4">Autumn Deals</option>
+                    <option value="5">Holiday Special</option>
+                </select>
+            </h2>
+            <canvas id="hourlyChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let ctrChart;
+        let hourlyChart;
+
+        async function fetchLiveStats() {
+            try {
+                const response = await fetch('/api/stats/live');
+                const data = await response.json();
+                
+                const labels = data.map(d => d.campaign_name);
+                const ctrData = data.map(d => {
+                    const views = parseInt(d.total_views);
+                    const clicks = parseInt(d.total_clicks);
+                    return views > 0 ? ((clicks / views) * 100).toFixed(2) : 0;
+                });
+
+                if (!ctrChart) {
+                    const ctx = document.getElementById('ctrChart').getContext('2d');
+                    ctrChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'CTR (%)',
+                                data: ctrData,
+                                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: '#334155' } },
+                                x: { grid: { display: false } }
+                            },
+                            plugins: {
+                                legend: { display: false }
+                            }
+                        }
+                    });
+                } else {
+                    ctrChart.data.labels = labels;
+                    ctrChart.data.datasets[0].data = ctrData;
+                    ctrChart.update();
+                }
+            } catch (error) {
+                console.error("Error fetching live stats:", error);
+            }
+        }
+
+        async function fetchHourlyStats() {
+            try {
+                const campaignId = document.getElementById('campaignSelect').value;
+                const response = await fetch(`/api/stats/hourly?campaignId=${campaignId}`);
+                const data = await response.json();
+
+                const labels = data.map(d => new Date(d.hour).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+                const clicksData = data.map(d => parseInt(d.clicks));
+
+                if (!hourlyChart) {
+                    const ctx = document.getElementById('hourlyChart').getContext('2d');
+                    hourlyChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Clicks',
+                                data: clicksData,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: '#334155' } },
+                                x: { grid: { color: '#334155' } }
+                            },
+                            plugins: {
+                                legend: { display: false }
+                            }
+                        }
+                    });
+                } else {
+                    hourlyChart.data.labels = labels;
+                    hourlyChart.data.datasets[0].data = clicksData;
+                    hourlyChart.update();
+                }
+            } catch (error) {
+                console.error("Error fetching hourly stats:", error);
+            }
+        }
+
+        // Initialize
+        fetchLiveStats();
+        fetchHourlyStats();
+
+        // Poll every 5 seconds
+        setInterval(() => {
+            fetchLiveStats();
+            fetchHourlyStats();
+        }, 5000);
+    </script>
+</body>
+</html>
