@@ -15,14 +15,26 @@ const getPopulatedExpenses = async (query) => {
 // Record an expense
 router.post('/record', async (req, res) => {
   try {
+    console.log('[POST /record] Incoming payload:', req.body);
     const { description, amount, date, user, category } = req.body;
+
+    if (!user || !category) {
+      console.error('[POST /record] Validation Error: User or Category is missing in request body.');
+      return res.status(400).json({ error: 'User and Category objects are required.' });
+    }
 
     // Validate existence of referenced elements and map to standard ObjectIds
     const userId = user.id || user._id;
     const categoryId = category.id || category._id;
 
+    if (!userId || !categoryId) {
+      console.error('[POST /record] Validation Error: User ID or Category ID is missing.');
+      return res.status(400).json({ error: 'User ID and Category ID are required.' });
+    }
+
     if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(categoryId)) {
-      return res.status(400).json({ error: 'Invalid user or category ID' });
+      console.error('[POST /record] Validation Error: Invalid ObjectId format.', { userId, categoryId });
+      return res.status(400).json({ error: 'Invalid user or category ID format.' });
     }
 
     const newExpense = new Expense({
@@ -46,8 +58,10 @@ router.post('/record', async (req, res) => {
       .populate('user.$id')
       .populate('category.$id');
 
+    console.log('[POST /record] Expense saved successfully:', populated);
     res.status(201).json(populated);
   } catch (err) {
+    console.error('[POST /record] Server exception caught:', err.stack || err.message);
     res.status(400).json({ error: err.message });
   }
 });

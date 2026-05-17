@@ -29,6 +29,44 @@ app.use((req, res, next) => {
   next();
 });
 
+// Database Connection & Serverless Connection Caching
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/expenseTracker';
+
+let cachedConnection = global.mongoose;
+if (!cachedConnection) {
+  cachedConnection = global.mongoose = { conn: null, promise: null };
+}
+
+const connectDB = async () => {
+  if (cachedConnection.conn) return cachedConnection.conn;
+
+  if (!cachedConnection.promise) {
+    console.log('🔄 Initiating new MongoDB connection...');
+    const opts = {
+      bufferCommands: false, // Fast fail in serverless to prevent timeout hangs
+      maxPoolSize: 5 // Keep pool size small to avoid exhausting connections in serverless scaling
+    };
+    cachedConnection.promise = mongoose.connect(MONGODB_URI, opts).then(m => {
+      console.log('✅ Connected to MongoDB successfully.');
+      return m;
+    });
+  }
+
+  cachedConnection.conn = await cachedConnection.promise;
+  return cachedConnection.conn;
+};
+
+// Database connection injector middleware (runs on every request before routing)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('❌ Database connection failure:', err.message);
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+});
+
 // Mount routes (matching `@RequestMapping` paths from Spring controllers)
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -36,21 +74,16 @@ app.use('/api/expenses', expenseRoutes);
 
 // Root path fallback
 app.get('/', (req, res) => {
-  res.send('Expense Tracker Node.js API is running...');
+  res.send('Expense Tracker Node.js API is running on Vercel Serverless!');
 });
 
-// Database Connection & Server Startup
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/expenseTracker';
+// Export the app instance for Vercel Serverless environment
+module.exports = app;
 
-console.log('🔄 Connecting to MongoDB...');
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('✅ Connected to MongoDB successfully.');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
-    });
-  })
-  .catch(err => {
-    console.error('❌ Failed to connect to MongoDB:', err.message);
-    process.exit(1);
+// Only spin up the listening port if running locally (not in Vercel production environment)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Local dev server is running on port ${PORT}`);
   });
+}
+
