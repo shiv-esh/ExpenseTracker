@@ -5,7 +5,48 @@ const Expense = require('../models/Expense');
 const User = require('../models/User');
 const Category = require('../models/Category');
 
-// Format a raw lean date to YYYY-MM-DD string
+// Robust helper to extract a clean 24-character hexadecimal ID string from any MongoDB representation
+const extractIdString = (field) => {
+  if (!field) return null;
+  if (typeof field === 'string') return field;
+  if (field instanceof mongoose.Types.ObjectId) return field.toString();
+  if (field._id) return extractIdString(field._id);
+  if (field.$id) return extractIdString(field.$id);
+  if (field.$oid) return extractIdString(field.$oid);
+  if (typeof field === 'object') {
+    // If it has a toString method that yields a valid 24-char hex string
+    const str = field.toString();
+    if (str && str.length === 24 && /^[0-9a-fA-F]{24}$/.test(str)) {
+      return str;
+    }
+    // Check serialized output for $oid properties (often returned from Atlas)
+    try {
+      const serialized = JSON.parse(JSON.stringify(field));
+      if (serialized && serialized.$oid) return serialized.$oid;
+      if (serialized && serialized.$id) return extractIdString(serialized.$id);
+    } catch (e) {}
+  }
+  return null;
+};
+
+// Robust helper to construct a query that matches either String or ObjectId representation
+const buildIdQuery = (fieldPath, idValue) => {
+  const query = {};
+  if (!idValue) return query;
+
+  const idStr = extractIdString(idValue);
+  if (!idStr) return query;
+
+  const ids = [idStr];
+  if (mongoose.Types.ObjectId.isValid(idStr)) {
+    ids.push(new mongoose.Types.ObjectId(idStr));
+  }
+
+  query[fieldPath] = { $in: ids };
+  return query;
+};
+
+// Format a raw date to YYYY-MM-DD string
 const formatDate = (d) => {
   const dt = new Date(d);
   const year = dt.getUTCFullYear();
@@ -16,13 +57,16 @@ const formatDate = (d) => {
 
 // Format a raw lean expense document for the Angular frontend
 const formatExpense = (exp, userMap, categoryMap) => {
-  // exp.user and exp.category are Spring Boot DBRefs: { $ref: 'collection', $id: ObjectId }
-  // .lean() preserves these fields untouched (bypasses Mongoose $ field stripping)
-  const userId = exp.user && exp.user.$id ? exp.user.$id.toString() : null;
-  const categoryId = exp.category && exp.category.$id ? exp.category.$id.toString() : null;
+  const userId = extractIdString(exp.user);
+  const categoryId = extractIdString(exp.category);
 
-  const user = userId && userMap[userId] ? { id: userMap[userId]._id.toString(), username: userMap[userId].username } : null;
-  const category = categoryId && categoryMap[categoryId] ? { id: categoryMap[categoryId]._id.toString(), name: categoryMap[categoryId].name } : null;
+  const user = userId && userMap[userId] 
+    ? { id: extractIdString(userMap[userId]._id), username: userMap[userId].username } 
+    : null;
+
+  const category = categoryId && categoryMap[categoryId] 
+    ? { id: extractIdString(categoryMap[categoryId]._id), name: categoryMap[categoryId].name } 
+    : null;
 
   return {
     id: exp._id.toString(),
@@ -43,10 +87,16 @@ const getPopulatedExpenses = async (query) => {
   ]);
 
   const userMap = {};
-  users.forEach(u => { userMap[u._id.toString()] = u; });
+  users.forEach(u => {
+    const idStr = extractIdString(u._id);
+    if (idStr) userMap[idStr] = u;
+  });
 
   const categoryMap = {};
-  categories.forEach(c => { categoryMap[c._id.toString()] = c; });
+  categories.forEach(c => {
+    const idStr = extractIdString(c._id);
+    if (idStr) categoryMap[idStr] = c;
+  });
 
   return expenses.map(exp => formatExpense(exp, userMap, categoryMap));
 };
@@ -54,10 +104,18 @@ const getPopulatedExpenses = async (query) => {
 // DEBUG: Expose raw document structures for diagnosis
 router.get('/debug/raw', async (req, res) => {
   try {
-    const expense = await mongoose.connection.collection('expenses').findOne();
-    const category = await mongoose.connection.collection('categories').findOne();
-    const user = await mongoose.connection.collection('users').findOne();
-    res.json({ expense, category, user });
+    const expenses = await mongoose.connection.collection('expenses').find().toArray();
+    const categories = await mongoose.connection.collection('categories').find().toArray();
+    const users = await mongoose.connection.collection('users').find().toArray();
+    
+    // Get unique category IDs referenced by expenses
+    const referencedCategoryIds = [...new Set(expenses.map(e => extractIdString(e.category) || 'null'))];
+    
+    res.json({
+      categories: categories.map(c => ({ id: extractIdString(c._id), name: c.name })),
+      referencedCategoryIds,
+      sampleExpense: expenses[0]
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -115,7 +173,9 @@ router.get('/user/:username', async (req, res) => {
   try {
     const user = await User.findOne({ username: req.params.username }).lean();
     if (!user) return res.status(200).json([]);
-    res.status(200).json(await getPopulatedExpenses({ 'user.$id': user._id }));
+    
+    const query = buildIdQuery('user.$id', user._id);
+    res.status(200).json(await getPopulatedExpenses(query));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -133,7 +193,12 @@ router.get('/total', async (req, res) => {
     const start = new Date(date + 'T00:00:00Z');
     const end = new Date(date + 'T23:59:59.999Z');
 
-    const expenses = await Expense.find({ 'user.$id': user._id, date: { $gte: start, $lte: end } }).lean();
+    const userQuery = buildIdQuery('user.$id', user._id);
+    const expenses = await Expense.find({
+      ...userQuery,
+      date: { $gte: start, $lte: end }
+    }).lean();
+
     const sum = expenses.reduce((acc, curr) => acc + curr.amount, 0.0);
     res.status(200).json(sum);
   } catch (err) {
@@ -153,7 +218,12 @@ router.get('/total/range', async (req, res) => {
     const start = new Date(startDate + 'T00:00:00Z');
     const end = new Date(endDate + 'T23:59:59.999Z');
 
-    const expenses = await Expense.find({ 'user.$id': user._id, date: { $gte: start, $lte: end } }).lean();
+    const userQuery = buildIdQuery('user.$id', user._id);
+    const expenses = await Expense.find({
+      ...userQuery,
+      date: { $gte: start, $lte: end }
+    }).lean();
+
     const sum = expenses.reduce((acc, curr) => acc + curr.amount, 0.0);
     res.status(200).json(sum);
   } catch (err) {
@@ -173,18 +243,24 @@ router.get('/analytics', async (req, res) => {
     const start = new Date(startDate + 'T00:00:00Z');
     const end = new Date(endDate + 'T23:59:59.999Z');
 
+    const userQuery = buildIdQuery('user.$id', user._id);
     const [expenses, categories] = await Promise.all([
-      Expense.find({ 'user.$id': user._id, date: { $gte: start, $lte: end } }).lean(),
+      Expense.find({
+        ...userQuery,
+        date: { $gte: start, $lte: end }
+      }).lean(),
       Category.find().lean()
     ]);
 
     const categoryMap = {};
-    categories.forEach(c => { categoryMap[c._id.toString()] = c.name; });
+    categories.forEach(c => {
+      const idStr = extractIdString(c._id);
+      if (idStr) categoryMap[idStr] = c.name;
+    });
 
     const categoryTotals = {};
     expenses.forEach(e => {
-      // .lean() preserves $id as a real BSON ObjectId so .toString() gives the hex string
-      const categoryId = e.category && e.category.$id ? e.category.$id.toString() : null;
+      const categoryId = extractIdString(e.category);
       const name = (categoryId && categoryMap[categoryId]) || 'Uncategorized';
       categoryTotals[name] = (categoryTotals[name] || 0.0) + e.amount;
     });
