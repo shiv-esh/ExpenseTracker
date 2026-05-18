@@ -5,11 +5,36 @@ const Expense = require('../models/Expense');
 const User = require('../models/User');
 const Category = require('../models/Category');
 
-// Helper to populate DBRefs and apply Mongoose transform
+// Helper to manually populate DBRefs since Mongoose does not natively populate legacy DBRef objects
 const getPopulatedExpenses = async (query) => {
-  return Expense.find(query)
-    .populate('user.$id')
-    .populate('category.$id');
+  const expenses = await Expense.find(query);
+  
+  // Fetch all users and categories into lookup maps for O(1) in-memory population
+  const users = await User.find();
+  const categories = await Category.find();
+
+  const userMap = {};
+  users.forEach(u => userMap[u._id.toString()] = u);
+
+  const categoryMap = {};
+  categories.forEach(c => categoryMap[c._id.toString()] = c);
+
+  // Return plain objects with fully populated user and category fields
+  return expenses.map(exp => {
+    const doc = exp.toJSON(); // Applies base transform (converts _id to id, extracts $id)
+    
+    // doc.user is currently the $id (ObjectId string) due to toJSON transform
+    if (doc.user && userMap[doc.user.toString()]) {
+      doc.user = userMap[doc.user.toString()].toJSON();
+    }
+
+    // doc.category is currently the $id (ObjectId string) due to toJSON transform
+    if (doc.category && categoryMap[doc.category.toString()]) {
+      doc.category = categoryMap[doc.category.toString()].toJSON();
+    }
+
+    return doc;
+  });
 };
 
 // Record an expense
@@ -53,10 +78,9 @@ router.post('/record', async (req, res) => {
 
     const saved = await newExpense.save();
     
-    // Fetch populated version of the saved expense to return to frontend
-    const populated = await Expense.findById(saved._id)
-      .populate('user.$id')
-      .populate('category.$id');
+    // Fetch manually populated version of the saved expense to return to frontend
+    const populatedList = await getPopulatedExpenses({ _id: saved._id });
+    const populated = populatedList[0];
 
     console.log('[POST /record] Expense saved successfully:', populated);
     res.status(201).json(populated);
@@ -164,16 +188,24 @@ router.get('/analytics', async (req, res) => {
     const start = new Date(startDate + 'T00:00:00Z');
     const end = new Date(endDate + 'T23:59:59.999Z');
 
-    // Fetch matching expenses and populate category to group on name
+    // Fetch matching expenses
     const expenses = await Expense.find({
       'user.$id': user._id,
       date: { $gte: start, $lte: end }
-    }).populate('category.$id');
+    });
+
+    // Fetch categories for O(1) lookup
+    const categories = await Category.find();
+    const categoryMap = {};
+    categories.forEach(c => categoryMap[c._id.toString()] = c.name);
 
     const categoryTotals = {};
 
     expenses.forEach(e => {
-      const categoryName = e.category && e.category.$id ? e.category.$id.name : 'Uncategorized';
+      let categoryName = 'Uncategorized';
+      if (e.category && e.category.$id) {
+        categoryName = categoryMap[e.category.$id.toString()] || 'Uncategorized';
+      }
       categoryTotals[categoryName] = (categoryTotals[categoryName] || 0.0) + e.amount;
     });
 
@@ -209,9 +241,8 @@ router.put('/:id', async (req, res) => {
 
     await expense.save();
 
-    const populated = await Expense.findById(expense._id)
-      .populate('user.$id')
-      .populate('category.$id');
+    const populatedList = await getPopulatedExpenses({ _id: expense._id });
+    const populated = populatedList[0];
 
     res.status(200).json(populated);
   } catch (err) {
