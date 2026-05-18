@@ -49,6 +49,8 @@ const getPopulatedExpenses = async (query) => {
   categories.forEach(c => { categoryMap[c._id.toString()] = c; });
 
   return expenses.map(exp => formatExpense(exp, userMap, categoryMap));
+};
+
 // DEBUG: Expose raw document structures for diagnosis
 router.get('/debug/raw', async (req, res) => {
   try {
