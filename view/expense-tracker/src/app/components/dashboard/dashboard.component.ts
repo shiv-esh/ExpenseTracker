@@ -27,6 +27,7 @@ export class DashboardComponent implements OnInit {
 
     // Expense list filter & pagination
     listFilterDate: string = '';
+    listFilterCategory: string = '';
     listFilterActive: boolean = false;
     currentPage: number = 1;
     pageSize: number = 10;
@@ -79,10 +80,18 @@ export class DashboardComponent implements OnInit {
 
     // Derived list shown in the table
     get filteredExpenses(): any[] {
-        if (this.listFilterActive && this.listFilterDate) {
-            return this.expenses.filter(e => e.date === this.listFilterDate);
+        let filtered = this.expenses;
+
+        if (this.listFilterActive) {
+            if (this.listFilterDate) {
+                filtered = filtered.filter(e => e.date === this.listFilterDate);
+            }
+            if (this.listFilterCategory) {
+                filtered = filtered.filter(e => e.category?.id === this.listFilterCategory);
+            }
         }
-        return this.expenses;
+        
+        return filtered;
     }
 
     toggleListFilter() {
@@ -90,6 +99,7 @@ export class DashboardComponent implements OnInit {
         this.currentPage = 1; // Reset to first page when filtering
         if (!this.listFilterActive) {
             this.listFilterDate = '';
+            this.listFilterCategory = '';
         }
     }
 

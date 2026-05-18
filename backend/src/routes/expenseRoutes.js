@@ -101,26 +101,6 @@ const getPopulatedExpenses = async (query) => {
   return expenses.map(exp => formatExpense(exp, userMap, categoryMap));
 };
 
-// DEBUG: Expose raw document structures for diagnosis
-router.get('/debug/raw', async (req, res) => {
-  try {
-    const expenses = await mongoose.connection.collection('expenses').find().toArray();
-    const categories = await mongoose.connection.collection('categories').find().toArray();
-    const users = await mongoose.connection.collection('users').find().toArray();
-    
-    // Get unique category IDs referenced by expenses
-    const referencedCategoryIds = [...new Set(expenses.map(e => extractIdString(e.category) || 'null'))];
-    
-    res.json({
-      categories: categories.map(c => ({ id: extractIdString(c._id), name: c.name })),
-      referencedCategoryIds,
-      sampleExpense: expenses[0]
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // Record an expense
 router.post('/record', async (req, res) => {
   try {

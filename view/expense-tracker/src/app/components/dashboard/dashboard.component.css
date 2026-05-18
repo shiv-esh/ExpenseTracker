@@ -485,6 +485,74 @@ textarea:focus {
     border-color: #e63946;
 }
 
+.list-filter-bar {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 0.85rem 1.2rem;
+    border-radius: 12px;
+    border: 1.5px solid #f1f3f5;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.filter-group label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    background: #ffffff;
+    min-width: 140px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: #ffccd5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.05);
+}
+
+.filter-results {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #e63946;
+    margin-left: auto;
+    background: #fff5f5;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    border: 1px solid #ffccd5;
+}
+
 .table-responsive {
     margin-top: 1rem;
     width: 100%;
