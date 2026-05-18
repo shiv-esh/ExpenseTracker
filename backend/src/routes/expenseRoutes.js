@@ -49,7 +49,17 @@ const getPopulatedExpenses = async (query) => {
   categories.forEach(c => { categoryMap[c._id.toString()] = c; });
 
   return expenses.map(exp => formatExpense(exp, userMap, categoryMap));
-};
+// DEBUG: Expose raw document structures for diagnosis
+router.get('/debug/raw', async (req, res) => {
+  try {
+    const expense = await mongoose.connection.collection('expenses').findOne();
+    const category = await mongoose.connection.collection('categories').findOne();
+    const user = await mongoose.connection.collection('users').findOne();
+    res.json({ expense, category, user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Record an expense
 router.post('/record', async (req, res) => {
