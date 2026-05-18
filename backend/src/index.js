@@ -12,9 +12,7 @@ const PORT = process.env.PORT || 8081;
 
 // CORS Configuration matching Spring Boot WebConfig exactly
 const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS 
-    ? process.env.ALLOWED_ORIGINS.split(',') 
-    : ['http://localhost:4200'],
+  origin: true, // Dynamically reflects requesting origin to ensure bulletproof CORS preflight and credentials support
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
