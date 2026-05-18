@@ -14,26 +14,12 @@ const expenseSchema = new mongoose.Schema({
     required: true
   },
   user: {
-    $ref: {
-      type: String,
-      default: 'users'
-    },
-    $id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      required: true
-    }
+    type: mongoose.Schema.Types.Mixed,
+    required: true
   },
   category: {
-    $ref: {
-      type: String,
-      default: 'categories'
-    },
-    $id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Category',
-      required: true
-    }
+    type: mongoose.Schema.Types.Mixed,
+    required: true
   }
 }, {
   timestamps: true,
