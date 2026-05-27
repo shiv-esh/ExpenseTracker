@@ -26,7 +26,8 @@ export class DashboardComponent implements OnInit {
     analyticsLoading: boolean = false;
 
     // Expense list filter & pagination
-    listFilterDate: string = '';
+    listFilterStartDate: string = '';
+    listFilterEndDate: string = '';
     listFilterCategory: string = '';
     listFilterActive: boolean = false;
     currentPage: number = 1;
@@ -83,8 +84,11 @@ export class DashboardComponent implements OnInit {
         let filtered = this.expenses;
 
         if (this.listFilterActive) {
-            if (this.listFilterDate) {
-                filtered = filtered.filter(e => e.date === this.listFilterDate);
+            if (this.listFilterStartDate) {
+                filtered = filtered.filter(e => e.date >= this.listFilterStartDate);
+            }
+            if (this.listFilterEndDate) {
+                filtered = filtered.filter(e => e.date <= this.listFilterEndDate);
             }
             if (this.listFilterCategory) {
                 filtered = filtered.filter(e => e.category?.id === this.listFilterCategory);
@@ -98,7 +102,8 @@ export class DashboardComponent implements OnInit {
         this.listFilterActive = !this.listFilterActive;
         this.currentPage = 1; // Reset to first page when filtering
         if (!this.listFilterActive) {
-            this.listFilterDate = '';
+            this.listFilterStartDate = '';
+            this.listFilterEndDate = '';
             this.listFilterCategory = '';
         }
     }

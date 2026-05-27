@@ -174,8 +174,12 @@
                     <!-- Date and Category filter inputs (shown when toggle is on) -->
                     <div class="list-filter-bar" *ngIf="listFilterActive">
                         <div class="filter-group">
-                            <label>Date</label>
-                            <input type="date" [(ngModel)]="listFilterDate" name="listDate" placeholder="Pick a date">
+                            <label>From</label>
+                            <input type="date" [(ngModel)]="listFilterStartDate" name="listStartDate">
+                        </div>
+                        <div class="filter-group">
+                            <label>To</label>
+                            <input type="date" [(ngModel)]="listFilterEndDate" name="listEndDate">
                         </div>
                         <div class="filter-group">
                             <label>Category</label>
@@ -184,15 +188,15 @@
                                 <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
                             </select>
                         </div>
-                        <span class="filter-results" *ngIf="listFilterDate || listFilterCategory">
+                        <span class="filter-results" *ngIf="listFilterStartDate || listFilterEndDate || listFilterCategory">
                             {{ filteredExpenses.length }} result{{ filteredExpenses.length === 1 ? '' : 's' }}
                         </span>
                     </div>
 
                     <div class="scroll-area">
                         <div class="empty-state" *ngIf="filteredExpenses.length === 0">
-                            <p *ngIf="listFilterActive && (listFilterDate || listFilterCategory)">No expenses found matching the selected filters.</p>
-                            <p *ngIf="!listFilterActive || (!listFilterDate && !listFilterCategory)">No expenses found. Start adding some!</p>
+                            <p *ngIf="listFilterActive && (listFilterStartDate || listFilterEndDate || listFilterCategory)">No expenses found matching the selected filters.</p>
+                            <p *ngIf="!listFilterActive || (!listFilterStartDate && !listFilterEndDate && !listFilterCategory)">No expenses found. Start adding some!</p>
                         </div>
                         <div class="table-responsive" *ngIf="filteredExpenses.length > 0">
                             <table>
