@@ -44,6 +44,12 @@ export class DashboardComponent implements OnInit {
     isEditing: boolean = false;
     editingId: string | null = null;
 
+    // Add/Edit now lives in a dialog instead of an always-open form
+    modalOpen: boolean = false;
+
+    // Monthly budget (new — persisted locally per user)
+    budget: number = 900;
+
     constructor(
         private authService: AuthService,
         private expenseService: ExpenseService,
@@ -63,6 +69,9 @@ export class DashboardComponent implements OnInit {
         this.customStartDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
         this.customEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
+        const savedBudget = localStorage.getItem(`expense-tracker-budget-${this.user.username}`);
+        if (savedBudget) this.budget = parseFloat(savedBudget);
+
         this.loadExpenses();
         this.loadCategories();
         this.loadDailyTotal();
@@ -72,17 +81,14 @@ export class DashboardComponent implements OnInit {
 
     loadExpenses() {
         this.expenseService.getExpensesByUser(this.user.username).subscribe(data => {
-            // Sort descending by date on arrival
             this.expenses = (data || []).sort((a: any, b: any) =>
                 new Date(b.date).getTime() - new Date(a.date).getTime()
             );
         });
     }
 
-    // Derived list shown in the table
     get filteredExpenses(): any[] {
         let filtered = this.expenses;
-
         if (this.listFilterActive) {
             if (this.listFilterStartDate) {
                 filtered = filtered.filter(e => e.date >= this.listFilterStartDate);
@@ -94,13 +100,12 @@ export class DashboardComponent implements OnInit {
                 filtered = filtered.filter(e => e.category?.id === this.listFilterCategory);
             }
         }
-        
         return filtered;
     }
 
     toggleListFilter() {
         this.listFilterActive = !this.listFilterActive;
-        this.currentPage = 1; // Reset to first page when filtering
+        this.currentPage = 1;
         if (!this.listFilterActive) {
             this.listFilterStartDate = '';
             this.listFilterEndDate = '';
@@ -118,15 +123,11 @@ export class DashboardComponent implements OnInit {
     }
 
     nextPage() {
-        if (this.currentPage < this.totalPages) {
-            this.currentPage++;
-        }
+        if (this.currentPage < this.totalPages) this.currentPage++;
     }
 
     prevPage() {
-        if (this.currentPage > 1) {
-            this.currentPage--;
-        }
+        if (this.currentPage > 1) this.currentPage--;
     }
 
     loadCategories() {
@@ -135,30 +136,12 @@ export class DashboardComponent implements OnInit {
         });
     }
 
-    saveExpense() {
-        const expenseData = {
-            ...this.newExpense,
-            user: this.user
-        };
-
-        if (this.isEditing && this.editingId) {
-            this.expenseService.updateExpense(this.editingId, expenseData).subscribe(() => {
-                this.loadAllData();
-                this.cancelEdit();
-            });
-        } else {
-            this.expenseService.recordExpense(expenseData).subscribe(() => {
-                this.loadAllData();
-                this.resetForm();
-            });
-        }
-    }
-
-    private loadAllData() {
-        this.loadExpenses();
-        this.loadDailyTotal();
-        this.loadRangeTotal();
-        this.loadAnalytics();
+    // --- Modal (Add / Edit) ---
+    openAddModal() {
+        this.isEditing = false;
+        this.editingId = null;
+        this.resetForm();
+        this.modalOpen = true;
     }
 
     editExpense(expense: any) {
@@ -170,14 +153,40 @@ export class DashboardComponent implements OnInit {
             description: expense.description || '',
             date: expense.date
         };
-        // Scroll to form
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        this.modalOpen = true;
     }
 
-    cancelEdit() {
+    closeModal() {
+        this.modalOpen = false;
         this.isEditing = false;
         this.editingId = null;
         this.resetForm();
+    }
+
+    saveExpense() {
+        const expenseData = {
+            ...this.newExpense,
+            user: this.user
+        };
+
+        if (this.isEditing && this.editingId) {
+            this.expenseService.updateExpense(this.editingId, expenseData).subscribe(() => {
+                this.loadAllData();
+                this.closeModal();
+            });
+        } else {
+            this.expenseService.recordExpense(expenseData).subscribe(() => {
+                this.loadAllData();
+                this.closeModal();
+            });
+        }
+    }
+
+    private loadAllData() {
+        this.loadExpenses();
+        this.loadDailyTotal();
+        this.loadRangeTotal();
+        this.loadAnalytics();
     }
 
     loadDailyTotal() {
@@ -200,6 +209,36 @@ export class DashboardComponent implements OnInit {
         });
     }
 
+    // --- Budget ---
+    setBudget(value: string) {
+        const n = parseFloat(value);
+        if (!isNaN(n) && n >= 0) {
+            this.budget = n;
+            localStorage.setItem(`expense-tracker-budget-${this.user.username}`, String(n));
+        }
+    }
+
+    get monthSpent(): number {
+        const now = new Date();
+        const start = this.formatDate(new Date(now.getFullYear(), now.getMonth(), 1));
+        const end = this.formatDate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+        return this.expenses
+            .filter(e => e.date >= start && e.date <= end)
+            .reduce((a, e) => a + e.amount, 0);
+    }
+
+    get budgetPercent(): number {
+        return this.budget > 0 ? (this.monthSpent / this.budget) * 100 : 0;
+    }
+
+    get budgetPercentClamped(): number {
+        return Math.min(100, this.budgetPercent);
+    }
+
+    get overBudget(): boolean {
+        return this.budgetPercent > 100;
+    }
+
     // --- Range filter helpers ---
     private formatDate(date: Date): string {
         const year = date.getFullYear();
@@ -213,25 +252,16 @@ export class DashboardComponent implements OnInit {
         if (this.filterMode === 'monthly') {
             const start = new Date(today.getFullYear(), today.getMonth(), 1);
             const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            return {
-                startDate: this.formatDate(start),
-                endDate: this.formatDate(end)
-            };
+            return { startDate: this.formatDate(start), endDate: this.formatDate(end) };
         } else if (this.filterMode === 'weekly') {
-            const dayOfWeek = today.getDay(); // 0 = Sun
+            const dayOfWeek = today.getDay();
             const start = new Date(today);
             start.setDate(today.getDate() - dayOfWeek);
             const end = new Date(start);
             end.setDate(start.getDate() + 6);
-            return {
-                startDate: this.formatDate(start),
-                endDate: this.formatDate(end)
-            };
+            return { startDate: this.formatDate(start), endDate: this.formatDate(end) };
         } else {
-            return {
-                startDate: this.customStartDate,
-                endDate: this.customEndDate
-            };
+            return { startDate: this.customStartDate, endDate: this.customEndDate };
         }
     }
 
@@ -240,14 +270,8 @@ export class DashboardComponent implements OnInit {
         if (!startDate || !endDate) return;
         this.rangeLoading = true;
         this.expenseService.getTotalByDateRange(this.user.username, startDate, endDate).subscribe({
-            next: (total) => {
-                this.rangeTotal = total;
-                this.rangeLoading = false;
-            },
-            error: () => {
-                this.rangeTotal = null;
-                this.rangeLoading = false;
-            }
+            next: (total) => { this.rangeTotal = total; this.rangeLoading = false; },
+            error: () => { this.rangeTotal = null; this.rangeLoading = false; }
         });
     }
 
@@ -256,20 +280,14 @@ export class DashboardComponent implements OnInit {
         if (!startDate || !endDate) return;
         this.analyticsLoading = true;
         this.expenseService.getCategoryAnalytics(this.user.username, startDate, endDate).subscribe({
-            next: (data) => {
-                this.categoryTotals = data || {};
-                this.analyticsLoading = false;
-            },
-            error: () => {
-                this.categoryTotals = {};
-                this.analyticsLoading = false;
-            }
+            next: (data) => { this.categoryTotals = data || {}; this.analyticsLoading = false; },
+            error: () => { this.categoryTotals = {}; this.analyticsLoading = false; }
         });
     }
 
     get categoryAnalyticsArray() {
         return Object.entries(this.categoryTotals)
-            .sort((a, b) => b[1] - a[1]) // Sort by amount descending
+            .sort((a, b) => b[1] - a[1])
             .map(([name, value]) => ({ name, value }));
     }
 
@@ -277,45 +295,30 @@ export class DashboardComponent implements OnInit {
         return Object.values(this.categoryTotals).reduce((a: number, b: number) => a + b, 0);
     }
 
-    // Chart helpers
+    // Chart helpers — tonal steps derived from the Classical accent ramp
     getCategoryColor(index: number): string {
         const colors = [
-            '#e63946', '#f4a261', '#2a9d8f', '#264653', '#e9c46a', 
-            '#457b9d', '#1d3557', '#a8dadc', '#9b5de5', '#f15bb5'
+            'var(--color-accent-800)', 'var(--color-accent-600)', 'var(--color-accent)',
+            'var(--color-accent-400)', 'var(--color-neutral-600)', 'var(--color-neutral-400)'
         ];
         return colors[index % colors.length];
     }
 
     getStrokeOffset(amount: number, index: number): number {
-        const circumference = 440; // 2 * pi * r (r=70)
-        let previousTotal = 0;
-        const array = this.categoryAnalyticsArray;
-        for (let i = 0; i < index; i++) {
-            previousTotal += array[i].value;
-        }
-        
-        // This is for a stacked donut implementation
+        const circumference = 440;
         const total = this.totalCategoryAmount;
         if (total === 0) return circumference;
-        
         return circumference - (amount / total) * circumference;
     }
 
-    // Since we're doing a simple SVG donut, we need the "start offset" 
-    // which is tricky with just CSS stroke-dashoffset if elements overlap.
-    // A better way for a single SVG circle with multiple segments is to stack them.
     getRotation(index: number): string {
         const total = this.totalCategoryAmount;
         if (total === 0) return 'rotate(0)';
-        
         const array = this.categoryAnalyticsArray;
         let previousTotal = 0;
-        for (let i = 0; i < index; i++) {
-            previousTotal += array[i].value;
-        }
-        
+        for (let i = 0; i < index; i++) previousTotal += array[i].value;
         const angle = (previousTotal / total) * 360;
-        return `rotate(${angle - 90}deg)`; // -90 to start from top
+        return `rotate(${angle - 90}deg)`;
     }
 
     setFilter(mode: 'monthly' | 'weekly' | 'custom') {
