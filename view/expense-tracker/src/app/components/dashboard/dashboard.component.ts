@@ -295,13 +295,23 @@ export class DashboardComponent implements OnInit {
         return Object.values(this.categoryTotals).reduce((a: number, b: number) => a + b, 0);
     }
 
-    // Chart helpers — tonal steps derived from the Classical accent ramp
-    getCategoryColor(index: number): string {
-        const colors = [
-            'var(--color-accent-800)', 'var(--color-accent-600)', 'var(--color-accent)',
-            'var(--color-accent-400)', 'var(--color-neutral-600)', 'var(--color-neutral-400)'
-        ];
-        return colors[index % colors.length];
+    // Chart helpers — a fixed, hue-varied palette assigned by category identity
+    // (not by sort rank) so a given category keeps the same color across
+    // date ranges. Kept separate from the nav/button accent, which stays gold.
+    private readonly categoryPalette: string[] = [
+        '#b68235', // gold (brand accent)
+        '#159c85', // teal
+        '#b1502f', // rust
+        '#3f5aa0', // slate blue
+        '#9c8419', // olive
+        '#9c3f78', // mauve
+        '#3f8a2f', // forest
+        '#a83a5a', // wine
+    ];
+
+    getCategoryColor(name: string): string {
+        const idx = this.categories.findIndex(c => c.name === name);
+        return this.categoryPalette[(idx >= 0 ? idx : 0) % this.categoryPalette.length];
     }
 
     getStrokeOffset(amount: number, index: number): number {

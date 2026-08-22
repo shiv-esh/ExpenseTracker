@@ -74,7 +74,7 @@
                             <circle class="donut-ring" cx="90" cy="90" r="70"></circle>
                             <circle *ngFor="let item of categoryAnalyticsArray; let i = index"
                                 class="donut-segment" cx="90" cy="90" r="70"
-                                [attr.stroke]="getCategoryColor(i)" stroke-dasharray="440"
+                                [attr.stroke]="getCategoryColor(item.name)" stroke-dasharray="440"
                                 [attr.stroke-dashoffset]="getStrokeOffset(item.value, i)"
                                 [style.transform]="getRotation(i)" transform-origin="90px 90px">
                             </circle>
@@ -82,7 +82,7 @@
                         <div class="legend">
                             <div *ngFor="let item of categoryAnalyticsArray; let i = index" class="legend-item">
                                 <span class="legend-left">
-                                    <span class="legend-dot" [style.background]="getCategoryColor(i)"></span>
+                                    <span class="legend-dot" [style.background]="getCategoryColor(item.name)"></span>
                                     {{ item.name }}
                                 </span>
                                 <span class="legend-amount">₹{{ item.value | number:'1.2-2' }}</span>
