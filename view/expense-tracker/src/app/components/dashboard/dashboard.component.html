@@ -135,7 +135,13 @@
                             <tbody>
                                 <tr *ngFor="let exp of paginatedExpenses">
                                     <td class="td-date">{{ exp.date | date:'shortDate' }}</td>
-                                    <td><span class="tag tag-outline">{{ exp.category?.name }}</span></td>
+                                    <td>
+                                        <span class="tag tag-outline"
+                                            [style.color]="getCategoryColor(exp.category?.name)"
+                                            [style.border-color]="getCategoryColor(exp.category?.name)">
+                                            {{ exp.category?.name }}
+                                        </span>
+                                    </td>
                                     <td class="td-desc">{{ exp.description || '—' }}</td>
                                     <td class="amount">₹{{ exp.amount | number:'1.2-2' }}</td>
                                     <td>
