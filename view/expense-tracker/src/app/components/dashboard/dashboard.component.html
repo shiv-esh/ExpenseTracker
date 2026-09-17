@@ -26,18 +26,34 @@
                 </div>
 
                 <div class="card">
+                    <div class="card-kicker">Weekly budget</div>
+                    <div class="budget-row">
+                        <span class="budget-spent">₹{{ weekSpent | number:'1.2-2' }}</span>
+                        <span class="budget-of">of ₹{{ weeklyBudget | number:'1.2-2' }}</span>
+                    </div>
+                    <div class="budget-track">
+                        <div class="budget-fill" [class.over]="weeklyOverBudget" [style.width.%]="weeklyBudgetPercentClamped"></div>
+                    </div>
+                    <div class="budget-meta">
+                        <span>{{ weeklyBudgetPercent | number:'1.0-0' }}% used</span>
+                        <input class="input budget-input" type="number" min="0" [value]="weeklyBudget"
+                            (change)="setWeeklyBudget($any($event.target).value)" title="Edit weekly budget">
+                    </div>
+                </div>
+
+                <div class="card">
                     <div class="card-kicker">Monthly budget</div>
                     <div class="budget-row">
                         <span class="budget-spent">₹{{ monthSpent | number:'1.2-2' }}</span>
-                        <span class="budget-of">of ₹{{ budget | number:'1.2-2' }}</span>
+                        <span class="budget-of">of ₹{{ monthlyBudget | number:'1.2-2' }}</span>
                     </div>
                     <div class="budget-track">
-                        <div class="budget-fill" [class.over]="overBudget" [style.width.%]="budgetPercentClamped"></div>
+                        <div class="budget-fill" [class.over]="monthlyOverBudget" [style.width.%]="monthlyBudgetPercentClamped"></div>
                     </div>
                     <div class="budget-meta">
-                        <span>{{ budgetPercent | number:'1.0-0' }}% used</span>
-                        <input class="input budget-input" type="number" min="0" [value]="budget"
-                            (change)="setBudget($any($event.target).value)" title="Edit monthly budget">
+                        <span>{{ monthlyBudgetPercent | number:'1.0-0' }}% used</span>
+                        <input class="input budget-input" type="number" min="0" [value]="monthlyBudget"
+                            (change)="setMonthlyBudget($any($event.target).value)" title="Edit monthly budget">
                     </div>
                 </div>
 

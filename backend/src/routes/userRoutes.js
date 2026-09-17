@@ -50,7 +50,9 @@ router.post('/login', async (req, res) => {
       token,
       id: user.id,
       username: user.username,
-      role: user.role
+      role: user.role,
+      monthlyBudget: user.monthlyBudget,
+      weeklyBudget: user.weeklyBudget
     });
   } catch (err) {
     res.status(401).send(err.message);
@@ -60,7 +62,7 @@ router.post('/login', async (req, res) => {
 // Update user details
 router.put('/:id', async (req, res) => {
   try {
-    const { username, password, role } = req.body;
+    const { username, password, role, monthlyBudget, weeklyBudget } = req.body;
     const user = await User.findById(req.params.id);
     
     if (!user) {
@@ -70,6 +72,8 @@ router.put('/:id', async (req, res) => {
     if (username) user.username = username;
     if (password) user.password = password; // Trigger pre-save password hash hook
     if (role) user.role = role;
+    if (monthlyBudget !== undefined) user.monthlyBudget = monthlyBudget;
+    if (weeklyBudget !== undefined) user.weeklyBudget = weeklyBudget;
 
     const updatedUser = await user.save();
     res.status(200).json(updatedUser);

@@ -32,6 +32,17 @@ export class AuthService {
         );
     }
 
+    updateUser(userId: string, data: any): Observable<any> {
+        return this.http.put(`${this.apiUrl}/${userId}`, data).pipe(
+            tap((updatedUser: any) => {
+                if (this.currentUser && (this.currentUser.id === updatedUser.id || this.currentUser._id === updatedUser.id)) {
+                    this.currentUser = { ...this.currentUser, ...updatedUser };
+                    localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                }
+            })
+        );
+    }
+
     logout() {
         this.currentUser = null;
         localStorage.removeItem('currentUser');

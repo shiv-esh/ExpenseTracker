@@ -47,8 +47,9 @@ export class DashboardComponent implements OnInit {
     // Add/Edit now lives in a dialog instead of an always-open form
     modalOpen: boolean = false;
 
-    // Monthly budget (new — persisted locally per user)
-    budget: number = 900;
+    // Budgets
+    monthlyBudget: number = 0;
+    weeklyBudget: number = 0;
 
     constructor(
         private authService: AuthService,
@@ -69,8 +70,8 @@ export class DashboardComponent implements OnInit {
         this.customStartDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
         this.customEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
-        const savedBudget = localStorage.getItem(`expense-tracker-budget-${this.user.username}`);
-        if (savedBudget) this.budget = parseFloat(savedBudget);
+        this.monthlyBudget = this.user.monthlyBudget || 0;
+        this.weeklyBudget = this.user.weeklyBudget || 0;
 
         this.loadExpenses();
         this.loadCategories();
@@ -210,11 +211,21 @@ export class DashboardComponent implements OnInit {
     }
 
     // --- Budget ---
-    setBudget(value: string) {
+    setMonthlyBudget(value: string) {
         const n = parseFloat(value);
         if (!isNaN(n) && n >= 0) {
-            this.budget = n;
-            localStorage.setItem(`expense-tracker-budget-${this.user.username}`, String(n));
+            this.monthlyBudget = n;
+            this.user.monthlyBudget = n;
+            this.authService.updateUser(this.user.id, { monthlyBudget: n }).subscribe();
+        }
+    }
+
+    setWeeklyBudget(value: string) {
+        const n = parseFloat(value);
+        if (!isNaN(n) && n >= 0) {
+            this.weeklyBudget = n;
+            this.user.weeklyBudget = n;
+            this.authService.updateUser(this.user.id, { weeklyBudget: n }).subscribe();
         }
     }
 
@@ -227,16 +238,43 @@ export class DashboardComponent implements OnInit {
             .reduce((a, e) => a + e.amount, 0);
     }
 
-    get budgetPercent(): number {
-        return this.budget > 0 ? (this.monthSpent / this.budget) * 100 : 0;
+    get weekSpent(): number {
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const start = new Date(today);
+        start.setDate(today.getDate() - dayOfWeek);
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        const startStr = this.formatDate(start);
+        const endStr = this.formatDate(end);
+        
+        return this.expenses
+            .filter(e => e.date >= startStr && e.date <= endStr)
+            .reduce((a, e) => a + e.amount, 0);
     }
 
-    get budgetPercentClamped(): number {
-        return Math.min(100, this.budgetPercent);
+    get monthlyBudgetPercent(): number {
+        return this.monthlyBudget > 0 ? (this.monthSpent / this.monthlyBudget) * 100 : 0;
     }
 
-    get overBudget(): boolean {
-        return this.budgetPercent > 100;
+    get monthlyBudgetPercentClamped(): number {
+        return Math.min(100, this.monthlyBudgetPercent);
+    }
+
+    get monthlyOverBudget(): boolean {
+        return this.monthlyBudgetPercent > 100;
+    }
+
+    get weeklyBudgetPercent(): number {
+        return this.weeklyBudget > 0 ? (this.weekSpent / this.weeklyBudget) * 100 : 0;
+    }
+
+    get weeklyBudgetPercentClamped(): number {
+        return Math.min(100, this.weeklyBudgetPercent);
+    }
+
+    get weeklyOverBudget(): boolean {
+        return this.weeklyBudgetPercent > 100;
     }
 
     // --- Range filter helpers ---

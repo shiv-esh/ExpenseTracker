@@ -15,6 +15,14 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     default: 'USER'
+  },
+  monthlyBudget: {
+    type: Number,
+    default: 0
+  },
+  weeklyBudget: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true,
